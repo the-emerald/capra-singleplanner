@@ -1,15 +1,15 @@
 {
-  "gfl": 50,
-  "gfh": 80,
+  "gfl": 70,
+  "gfh": 85,
   "asc": -10,
   "desc": 20,
 
   "segments": [
     {
-      "depth": 45,
-      "time": 60,
+      "depth": 100,
+      "time": 25,
       "o2": 0.21,
-      "he": 0.0
+      "he": 0
     }
   ],
 
