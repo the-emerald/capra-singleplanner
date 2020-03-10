@@ -84,7 +84,7 @@ fn main() {
         &Gas::new(0.79, 0.21, 0.0).unwrap(),
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
-    let plan = plan_dive(zhl16, &bottom_segments, &deco_mixes);
+    let plan = plan_dive(zhl16, &bottom_segments, &deco_mixes, ascent_rate, descent_rate);
     println!("Ascent rate: {}m/min", ascent_rate);
     println!("Descent rate: {}m/min", descent_rate);
     println!("GFL/GFH: {}/{}", gfl, gfh);
