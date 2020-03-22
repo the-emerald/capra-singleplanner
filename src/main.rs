@@ -45,9 +45,7 @@ fn main() {
     let mut bottom_segments: Vec<(DiveSegment, Gas)> = Vec::new();
     let mut deco_mixes: Vec<(Gas, Option<usize>)> = Vec::new();
 
-    let js: JSONDive = serde_json::from_str(&line).unwrap();
-
-//    println!("{:?}", js);
+    let js: JSONDive = serde_json::from_str(&line).expect("Unable to decode user input");
 
     let ascent_rate = match js.asc {
         Some(t) => t,
@@ -70,18 +68,20 @@ fn main() {
     };
 
     for gas in js.deco_gases {
-        deco_mixes.push((Gas::new(1.0 - gas.he - gas.o2, gas.o2, gas.he).unwrap(), gas.modepth));
+        deco_mixes.push((Gas::new(1.0 - gas.he - gas.o2, gas.o2, gas.he)
+                             .expect("Unable to decode decompression gas"), gas.modepth));
     }
 
     for seg in js.segments {
         bottom_segments.push((DiveSegment::new(SegmentType::DiveSegment,
                                             seg.depth, seg.depth, seg.time, ascent_rate,
-                                            descent_rate).unwrap(),
-                           Gas::new(1.0 - seg.he - seg.o2, seg.o2, seg.he).unwrap()));
+                                            descent_rate).expect("Unable to decode segment"),
+                           Gas::new(1.0 - seg.he - seg.o2, seg.o2, seg.he)
+                               .expect("Unable to decode bottom gas")));
     }
 
     let zhl16 = ZHL16::new(
-        &Gas::new(0.79, 0.21, 0.0).unwrap(),
+        &Gas::new(0.79, 0.21, 0.0).unwrap(), // This shouldn't error
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
     let plan = plan_dive(zhl16, &bottom_segments, &deco_mixes, ascent_rate, descent_rate);
