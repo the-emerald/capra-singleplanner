@@ -84,14 +84,15 @@ fn main() {
         &Gas::new(0.79, 0.21, 0.0).unwrap(), // This shouldn't error
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
-    let plan = plan_dive(&mut zhl16, &bottom_segments, &deco_mixes, ascent_rate, descent_rate);
+    let plan = plan_dive(&mut zhl16, &bottom_segments, &deco_mixes, ascent_rate, descent_rate)
+        .iter()
+        .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
+        .cloned().collect::<Vec<(DiveSegment, Gas)>>();
     println!("Ascent rate: {}m/min", ascent_rate);
     println!("Descent rate: {}m/min", descent_rate);
     println!("GFL/GFH: {}/{}", gfl, gfh);
+
     for x in plan {
-        if x.0.get_segment_type() == SegmentType::AscDesc {
-            continue;
-        }
         println!("{:?}: {}m for {}min - {}/{}", x.0.get_segment_type(), x.0.get_end_depth(),
                  x.0.get_time(), (x.1.fr_o2()*100.0) as usize, (x.1.fr_he()*100.0) as usize);
     }
