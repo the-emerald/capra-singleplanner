@@ -2,11 +2,11 @@ use std::io::{BufRead, BufReader};
 use std::io;
 use capra::common::dive_segment::{DiveSegment, SegmentType};
 use serde::{Deserialize, Serialize};
-use capra::zhl16::ZHL16;
-use capra::zhl16::util::{ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_HALFLIFE, ZHL16B_HE_B};
-use capra::planner::open_circuit::OpenCircuit;
-use capra::planner::dive::Dive;
-use capra::gas::Gas;
+use capra::common::gas::Gas;
+use capra::deco::zhl16::ZHL16;
+use capra::deco::zhl16::util::{ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE};
+use capra::dive_plan::open_circuit::OpenCircuit;
+use capra::dive_plan::dive::Dive;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
