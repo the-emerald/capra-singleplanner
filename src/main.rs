@@ -3,9 +3,10 @@ use std::io;
 use capra::common::dive_segment::{DiveSegment, SegmentType};
 use capra::common::gas::Gas;
 use serde::{Deserialize, Serialize};
-use capra::planner::plan_dive;
 use capra::zhl16::ZHL16;
 use capra::zhl16::util::{ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_HALFLIFE, ZHL16B_HE_B};
+use capra::planner::open_circuit::OpenCircuit;
+use capra::planner::dive::Dive;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -80,14 +81,17 @@ fn main() {
                                .expect("unable to decode bottom gas")));
     }
 
-    let mut zhl16 = ZHL16::new(
+    let zhl16 = ZHL16::new(
         &Gas::new(0.79, 0.21, 0.0).unwrap(), // This shouldn't error
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
-    let plan = plan_dive(&mut zhl16, &bottom_segments, &deco_mixes, ascent_rate, descent_rate)
+    let mut dive = OpenCircuit::new(zhl16, &deco_mixes, &bottom_segments, ascent_rate, descent_rate);
+
+    let plan = dive.plan_dive()
         .iter()
         .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
         .cloned().collect::<Vec<(DiveSegment, Gas)>>();
+
     println!("Ascent rate: {}m/min", ascent_rate);
     println!("Descent rate: {}m/min", descent_rate);
     println!("GFL/GFH: {}/{}", gfl, gfh);
