@@ -1,12 +1,12 @@
 use std::io::{BufRead, BufReader};
 use std::io;
 use capra::common::dive_segment::{DiveSegment, SegmentType};
-use capra::common::gas::Gas;
 use serde::{Deserialize, Serialize};
 use capra::zhl16::ZHL16;
 use capra::zhl16::util::{ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_HALFLIFE, ZHL16B_HE_B};
 use capra::planner::open_circuit::OpenCircuit;
 use capra::planner::dive::Dive;
+use capra::gas::Gas;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -87,7 +87,7 @@ fn main() {
 
     let mut dive = OpenCircuit::new(zhl16, &deco_mixes, &bottom_segments, ascent_rate, descent_rate);
 
-    let plan = dive.plan_dive()
+    let plan = dive.execute_dive()
         .iter()
         .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
         .cloned().collect::<Vec<(DiveSegment, Gas)>>();
