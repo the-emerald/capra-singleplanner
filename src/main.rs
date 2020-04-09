@@ -7,6 +7,7 @@ use capra::deco::zhl16::ZHL16;
 use capra::deco::zhl16::util::{ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE};
 use capra::dive_plan::open_circuit::OpenCircuit;
 use capra::dive_plan::dive::Dive;
+use time::Duration;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -34,6 +35,12 @@ struct JSONDive {
     desc: Option<isize>,
     segments: Vec<JSONDiveSegment>,
     deco_gases: Vec<JSONDecoGas>
+}
+
+fn pretty_time(duration: &Duration) -> String {
+    let m = duration.whole_minutes();
+    let s = duration.whole_seconds() - m*60;
+    format!("{}:{:0>2}", m, s)
 }
 
 fn main() {
@@ -75,8 +82,8 @@ fn main() {
 
     for seg in js.segments {
         bottom_segments.push((DiveSegment::new(SegmentType::DiveSegment,
-                                            seg.depth, seg.depth, seg.time, ascent_rate,
-                                            descent_rate).expect("unable to decode segment"),
+                                               seg.depth, seg.depth, Duration::minutes(seg.time as i64), ascent_rate,
+                                               descent_rate).expect("unable to decode segment"),
                            Gas::new(1.0 - seg.he - seg.o2, seg.o2, seg.he)
                                .expect("unable to decode bottom gas")));
     }
@@ -85,19 +92,30 @@ fn main() {
         &Gas::new(0.79, 0.21, 0.0).unwrap(), // This shouldn't error
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
-    let mut dive = OpenCircuit::new(zhl16, &deco_mixes, &bottom_segments, ascent_rate, descent_rate);
+    let mut dive = OpenCircuit::new(zhl16, &deco_mixes, &bottom_segments, ascent_rate, descent_rate, 0, 0);
 
     let plan = dive.execute_dive()
         .iter()
         .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
         .cloned().collect::<Vec<(DiveSegment, Gas)>>();
 
+    // let plan = dive.execute_dive(); // Use this to include all AscDesc segments
+
     println!("Ascent rate: {}m/min", ascent_rate);
     println!("Descent rate: {}m/min", descent_rate);
     println!("GFL/GFH: {}/{}", gfl, gfh);
 
     for x in plan {
-        println!("{:?}: {}m for {}min - {}/{}", x.0.get_segment_type(), x.0.get_end_depth(),
-                 x.0.get_time(), (x.1.fr_o2()*100.0) as usize, (x.1.fr_he()*100.0) as usize);
+        match x.0.get_segment_type() {
+            SegmentType::AscDesc => {
+                println!("{:?}: {}m -> {}m for {} - {}/{}", x.0.get_segment_type(), x.0.get_start_depth(), x.0.get_end_depth(),
+                         pretty_time(x.0.get_time()), (x.1.fr_o2()*100.0) as usize, (x.1.fr_he()*100.0) as usize);
+            }
+            _ => {
+                println!("{:?}: {}m for {} - {}/{}", x.0.get_segment_type(), x.0.get_end_depth(),
+                         pretty_time(x.0.get_time()), (x.1.fr_o2()*100.0) as usize, (x.1.fr_he()*100.0) as usize);
+            }
+        }
+
     }
 }
