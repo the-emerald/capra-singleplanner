@@ -1,0 +1,1 @@
+hyperfine --warmup 8 --min-runs 64 'cargo run --release < src/sample_rev.json'
