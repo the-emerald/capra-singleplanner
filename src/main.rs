@@ -9,6 +9,7 @@ use capra::dive_plan::open_circuit::OpenCircuit;
 use capra::dive_plan::dive::Dive;
 use time::Duration;
 use capra::common::{DENSITY_FRESHWATER, DENSITY_SALTWATER, time_taken};
+use capra::gas_plan::GasPlan;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -108,16 +109,18 @@ fn main() {
         &Gas::new(21, 0, 79).unwrap(), // This shouldn't error
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
-    let mut dive = OpenCircuit::new(zhl16,
+    let dive = OpenCircuit::new(zhl16,
                                     &deco_mixes, &bottom_segments, ascent_rate,
-                                    descent_rate, DENSITY_SALTWATER, 0, 0);
+                                    descent_rate, DENSITY_SALTWATER, 25, 15);
 
-    let plan = dive.execute_dive()
+    let plan = dive.execute_dive().1
         .iter()
         .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
         .cloned().collect::<Vec<(DiveSegment, Gas)>>();
 
     // let plan = dive.execute_dive(); // Use this to include all AscDesc segments
+
+    let gas_plan = dive.plan_forwards();
 
     // let new_zhl = dive.finish();
     // println!("{:?}", new_zhl);
@@ -137,5 +140,9 @@ fn main() {
                          pretty_time(x.0.get_time()), (x.1.fr_o2()*100.0) as usize, (x.1.fr_he()*100.0) as usize);
             }
         }
+    }
+    println!("\nGas:");
+    for (gas, qty) in gas_plan {
+        println!("{}/{}: {} litres", gas.o2(), gas.he(), qty)
     }
 }
