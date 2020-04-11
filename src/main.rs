@@ -51,7 +51,7 @@ fn main() {
         line = line.to_owned() + &x.expect("unable to read input") + "\n"
     }
 
-    // let line = fs::read_to_string("src/sample_rev.json") // Use this for profiling!
+    // let line = fs::read_to_string("samples/sample_rev.json") // Use this for profiling!
     //     .expect("Something went wrong reading the file");
 
     let mut bottom_segments: Vec<(DiveSegment, Gas)> = Vec::new();
