@@ -10,6 +10,8 @@ use capra::dive_plan::dive::Dive;
 use time::Duration;
 use capra::common::{DENSITY_FRESHWATER, DENSITY_SALTWATER, time_taken};
 use capra::gas_plan::GasPlan;
+use tabular::Table;
+use tabular::row;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -111,14 +113,14 @@ fn main() {
 
     let dive = OpenCircuit::new(zhl16,
                                     &deco_mixes, &bottom_segments, ascent_rate,
-                                    descent_rate, DENSITY_SALTWATER, 25, 15);
+                                    descent_rate, DENSITY_SALTWATER, 20, 15);
 
-    let plan = dive.execute_dive().1
-        .iter()
-        .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
-        .cloned().collect::<Vec<(DiveSegment, Gas)>>();
+    // let plan = dive.execute_dive().1
+    //     .iter()
+    //     .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
+    //     .cloned().collect::<Vec<(DiveSegment, Gas)>>();
 
-    // let plan = dive.execute_dive(); // Use this to include all AscDesc segments
+    let plan = dive.execute_dive().1; // Use this to include all AscDesc segments
 
     let gas_plan = dive.plan_forwards();
 
@@ -129,20 +131,44 @@ fn main() {
     println!("Descent rate: {}m/min", descent_rate);
     println!("GFL/GFH: {}/{}\n", gfl, gfh);
 
+    let mut dive_plan_table = Table::new("{:>}  {:>}  {:>}  {:>}");
+    dive_plan_table.add_row(row!("Segment", "Depth", "Time", "Gas"));
     for x in plan {
+        let gas = format!("{}/{}", x.1.o2(), x.1.he());
+        let segment_type = format!("{:?}", x.0.get_segment_type());
         match x.0.get_segment_type() {
             SegmentType::AscDesc => {
-                println!("{:?}: {}m -> {}m for {} - {}/{}", x.0.get_segment_type(), x.0.get_start_depth(), x.0.get_end_depth(),
-                         pretty_time(x.0.get_time()), (x.1.fr_o2()*100.0) as usize, (x.1.fr_he()*100.0) as usize);
+                let text = format!("-> {}m", x.0.get_end_depth());
+                dive_plan_table.add_row(row!(
+                    segment_type,
+                    text,
+                    pretty_time(x.0.get_time()),
+                    gas
+                ));
             }
             _ => {
-                println!("{:?}: {}m for {} - {}/{}", x.0.get_segment_type(), x.0.get_end_depth(),
-                         pretty_time(x.0.get_time()), (x.1.fr_o2()*100.0) as usize, (x.1.fr_he()*100.0) as usize);
+                let text = format!("{}m", x.0.get_end_depth());
+                dive_plan_table.add_row(row!(
+                    segment_type,
+                    text,
+                    pretty_time(x.0.get_time()),
+                    gas
+                ));
             }
         }
     }
-    println!("\nGas:");
+    println!("{}", dive_plan_table);
+
+    let mut gas_plan_table = Table::new("{:>}  {:>}");
+    gas_plan_table.add_row(row!("Gas", "Amount"));
+
     for (gas, qty) in gas_plan {
-        println!("{}/{}: {} litres", gas.o2(), gas.he(), qty)
+        let gas_str = format!("{}/{}", gas.o2(), gas.he());
+        let qty_str = format!("{} litres", qty);
+        gas_plan_table.add_row(row!(
+        gas_str,
+        qty_str
+        ));
     }
+    println!("{}", gas_plan_table);
 }
