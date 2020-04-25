@@ -3,4 +3,4 @@ export RUST_BACKTRACE="full"
 
 # shellcheck disable=SC2002
 #cat src/sample_46_15.json | cargo run 2> output_sample_40_22.txt
-cargo run --release < samples/sample.json
+cargo run --release < samples/sample_sammy.json

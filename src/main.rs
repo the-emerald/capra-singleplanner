@@ -87,17 +87,17 @@ fn main() {
                              .expect("unable to decode decompression gas"), gas.modepth));
     }
 
-    bottom_segments.push((
-        DiveSegment::new(
-            SegmentType::AscDesc,
-            0,
-            js.segments[0].depth,
-            time_taken(descent_rate, 0, js.segments[0].depth),
-            ascent_rate,
-            descent_rate
-        ).unwrap()
-        , Gas::new(js.segments[0].o2, js.segments[0].he, 100 - js.segments[0].o2 - js.segments[0].he).unwrap()
-    ));
+    // bottom_segments.push((
+    //     DiveSegment::new(
+    //         SegmentType::AscDesc,
+    //         0,
+    //         js.segments[0].depth,
+    //         time_taken(descent_rate, 0, js.segments[0].depth),
+    //         ascent_rate,
+    //         descent_rate
+    //     ).unwrap()
+    //     , Gas::new(js.segments[0].o2, js.segments[0].he, 100 - js.segments[0].o2 - js.segments[0].he).unwrap()
+    // ));
 
     for seg in js.segments {
         bottom_segments.push((DiveSegment::new(SegmentType::DiveSegment,
@@ -123,9 +123,6 @@ fn main() {
     let plan = dive.execute_dive().1; // Use this to include all AscDesc segments
 
     let gas_plan = dive.plan_forwards();
-
-    // let new_zhl = dive.finish();
-    // println!("{:?}", new_zhl);
 
     println!("Ascent rate: {}m/min", ascent_rate);
     println!("Descent rate: {}m/min", descent_rate);
