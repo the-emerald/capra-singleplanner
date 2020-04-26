@@ -16,6 +16,8 @@ use std::iter::FromIterator;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
+const DEFAULT_BOTTOM_SAC: usize = 20;
+const DEFAULT_DECO_SAC: usize = 20;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct JSONDecoGas {
@@ -38,6 +40,8 @@ struct JSONDive {
     gfh: Option<usize>,
     asc: Option<isize>,
     desc: Option<isize>,
+    bottom_sac: Option<usize>,
+    deco_sac: Option<usize>,
     segments: Vec<JSONDiveSegment>,
     deco_gases: Vec<JSONDecoGas>
 }
@@ -88,18 +92,6 @@ fn main() {
                              .expect("unable to decode decompression gas"), gas.modepth));
     }
 
-    // bottom_segments.push((
-    //     DiveSegment::new(
-    //         SegmentType::AscDesc,
-    //         0,
-    //         js.segments[0].depth,
-    //         time_taken(descent_rate, 0, js.segments[0].depth),
-    //         ascent_rate,
-    //         descent_rate
-    //     ).unwrap()
-    //     , Gas::new(js.segments[0].o2, js.segments[0].he, 100 - js.segments[0].o2 - js.segments[0].he).unwrap()
-    // ));
-
     for seg in js.segments {
         bottom_segments.push((DiveSegment::new(SegmentType::DiveSegment,
                                                seg.depth, seg.depth, Duration::minutes(seg.time as i64), ascent_rate,
@@ -108,13 +100,23 @@ fn main() {
                                .expect("unable to decode bottom gas")));
     }
 
+    let bottom_sac = match js.bottom_sac {
+        Some(t) => t,
+        None => DEFAULT_BOTTOM_SAC
+    };
+
+    let deco_sac = match js.deco_sac {
+        Some(t) => t,
+        None => DEFAULT_DECO_SAC
+    };
+
     let zhl16 = ZHL16::new(
         &Gas::new(21, 0, 79).unwrap(), // This shouldn't error
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
     let dive = OpenCircuit::new(zhl16,
                                     &deco_mixes, &bottom_segments, ascent_rate,
-                                    descent_rate, DENSITY_SALTWATER, 20, 15);
+                                    descent_rate, DENSITY_SALTWATER, bottom_sac, deco_sac);
 
     // let plan = dive.execute_dive().1
     //     .iter()

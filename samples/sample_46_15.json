@@ -3,6 +3,8 @@
   "gfh": 80,
   "asc": -10,
   "desc": 20,
+  "bottom_sac": 20,
+  "deco_sac": 15,
 
   "segments": [
     {
