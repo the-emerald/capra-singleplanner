@@ -12,6 +12,7 @@ use capra::common::{DENSITY_FRESHWATER, DENSITY_SALTWATER, time_taken};
 use capra::gas_plan::GasPlan;
 use tabular::Table;
 use tabular::row;
+use std::iter::FromIterator;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -122,15 +123,18 @@ fn main() {
 
     let plan = dive.execute_dive().1; // Use this to include all AscDesc segments
 
-    let gas_plan = dive.plan_forwards();
+    let mut gas_plan = Vec::from_iter(dive.plan_forwards());
+    gas_plan.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
 
     println!("Ascent rate: {}m/min", ascent_rate);
     println!("Descent rate: {}m/min", descent_rate);
     println!("GFL/GFH: {}/{}\n", gfl, gfh);
 
-    let mut dive_plan_table = Table::new("{:>}  {:>}  {:>}  {:>}");
-    dive_plan_table.add_row(row!("Segment", "Depth", "Time", "Gas"));
+    let mut dive_plan_table = Table::new("{:>}  {:>}  {:>}  {:>}  {:>}");
+    let mut runtime = Duration::zero();
+    dive_plan_table.add_row(row!("Segment", "Depth", "Time", "Runtime", "Gas"));
     for x in plan {
+        runtime += *x.0.get_time();
         let gas = format!("{}/{}", x.1.o2(), x.1.he());
         let segment_type = format!("{:?}", x.0.get_segment_type());
         match x.0.get_segment_type() {
@@ -140,6 +144,7 @@ fn main() {
                     segment_type,
                     text,
                     pretty_time(x.0.get_time()),
+                    pretty_time(&runtime),
                     gas
                 ));
             }
@@ -149,6 +154,7 @@ fn main() {
                     segment_type,
                     text,
                     pretty_time(x.0.get_time()),
+                    pretty_time(&runtime),
                     gas
                 ));
             }
@@ -158,8 +164,10 @@ fn main() {
 
     let mut gas_plan_table = Table::new("{:>}  {:>}");
     gas_plan_table.add_row(row!("Gas", "Amount"));
+    let mut total_gas = 0;
 
     for (gas, qty) in gas_plan {
+        total_gas += qty;
         let gas_str = format!("{}/{}", gas.o2(), gas.he());
         let qty_str = format!("{} litres", qty);
         gas_plan_table.add_row(row!(
@@ -167,5 +175,10 @@ fn main() {
         qty_str
         ));
     }
+    gas_plan_table.add_row(row!(
+        "Total",
+        format!("{} litres", total_gas)
+    ));
     println!("{}", gas_plan_table);
+    // println!("Total gas: {} litres", total_gas);
 }
