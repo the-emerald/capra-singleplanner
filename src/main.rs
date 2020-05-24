@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 use capra::common::gas::Gas;
 use capra::deco::zhl16::ZHL16;
 use capra::deco::zhl16::util::{ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE};
-use capra::dive_plan::open_circuit::OpenCircuit;
-use capra::dive_plan::dive::Dive;
 use time::Duration;
 use capra::common::{DENSITY_FRESHWATER, DENSITY_SALTWATER, time_taken};
-use capra::gas_plan::GasPlan;
 use tabular::Table;
 use tabular::row;
 use std::iter::FromIterator;
+use capra::planning::diveplan::open_circuit::OpenCircuit;
+use capra::planning::diveplan::DivePlan;
+use capra::planning::gasplan::GasPlan;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -136,26 +136,26 @@ fn main() {
     let mut runtime = Duration::zero();
     dive_plan_table.add_row(row!("Segment", "Depth", "Time", "Runtime", "Gas"));
     for x in plan {
-        runtime += *x.0.get_time();
+        runtime += *x.0.time();
         let gas = format!("{}/{}", x.1.o2(), x.1.he());
-        let segment_type = format!("{:?}", x.0.get_segment_type());
-        match x.0.get_segment_type() {
+        let segment_type = format!("{:?}", x.0.segment_type());
+        match x.0.segment_type() {
             SegmentType::AscDesc => {
-                let text = format!("-> {}m", x.0.get_end_depth());
+                let text = format!("-> {}m", x.0.end_depth());
                 dive_plan_table.add_row(row!(
                     segment_type,
                     text,
-                    pretty_time(x.0.get_time()),
+                    pretty_time(x.0.time()),
                     pretty_time(&runtime),
                     gas
                 ));
             }
             _ => {
-                let text = format!("{}m", x.0.get_end_depth());
+                let text = format!("{}m", x.0.end_depth());
                 dive_plan_table.add_row(row!(
                     segment_type,
                     text,
-                    pretty_time(x.0.get_time()),
+                    pretty_time(x.0.time()),
                     pretty_time(&runtime),
                     gas
                 ));
