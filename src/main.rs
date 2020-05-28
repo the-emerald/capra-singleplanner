@@ -10,9 +10,8 @@ use capra::common::{DENSITY_FRESHWATER, DENSITY_SALTWATER, time_taken};
 use tabular::Table;
 use tabular::row;
 use std::iter::FromIterator;
-use capra::planning::diveplan::open_circuit::OpenCircuit;
-use capra::planning::diveplan::DivePlan;
-use capra::planning::gasplan::GasPlan;
+use capra::planning::modes::open_circuit::OpenCircuit;
+use capra::planning::DivePlan;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -118,14 +117,9 @@ fn main() {
                                     &deco_mixes, &bottom_segments, ascent_rate,
                                     descent_rate, DENSITY_SALTWATER, bottom_sac, deco_sac);
 
-    // let plan = dive.execute_dive().1
-    //     .iter()
-    //     .filter(|x| x.0.get_segment_type() != SegmentType::AscDesc) // Filter AscDesc segments
-    //     .cloned().collect::<Vec<(DiveSegment, Gas)>>();
+    let plan = dive.plan(); // Use this to include all AscDesc segments
 
-    let plan = dive.execute_dive().1; // Use this to include all AscDesc segments
-
-    let mut gas_plan = Vec::from_iter(dive.plan_forwards());
+    let mut gas_plan = Vec::from_iter(plan.gas_used());
     gas_plan.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
 
     println!("Ascent rate: {}m/min", ascent_rate);
@@ -135,7 +129,7 @@ fn main() {
     let mut dive_plan_table = Table::new("{:>}  {:>}  {:>}  {:>}  {:>}");
     let mut runtime = Duration::zero();
     dive_plan_table.add_row(row!("Segment", "Depth", "Time", "Runtime", "Gas"));
-    for x in plan {
+    for x in plan.total_segments() {
         runtime += *x.0.time();
         let gas = format!("{}/{}", x.1.o2(), x.1.he());
         let segment_type = format!("{:?}", x.0.segment_type());
