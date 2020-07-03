@@ -12,6 +12,7 @@ use tabular::row;
 use std::iter::FromIterator;
 use capra::planning::modes::open_circuit::OpenCircuit;
 use capra::planning::DivePlan;
+use capra::deco::tissue::Tissue;
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
@@ -110,7 +111,7 @@ fn main() {
     };
 
     let zhl16 = ZHL16::new(
-        &Gas::new(21, 0, 79).unwrap(), // This shouldn't error
+        Tissue::default(), // This shouldn't error
         ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
 
     let dive = OpenCircuit::new(zhl16,
