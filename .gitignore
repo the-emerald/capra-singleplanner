@@ -3,3 +3,6 @@ final/
 
 **/*.rs.bk
 Cargo.lock
+
+# IntelliJ
+.idea/

@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-capra = {path="../capra"}
+capra = "^0.2.0"
+capra-core = "^0.3.0"
 serde_json = "1.0.48"
 serde = {version = "1.0.104", features = ["derive"]}
 time = "0.2.16"

@@ -1,23 +1,24 @@
 use std::io::{BufRead, BufReader};
 use std::{io, fs};
-use capra::common::dive_segment::{DiveSegment, SegmentType};
 use serde::{Deserialize, Serialize};
-use capra::common::gas::Gas;
-use capra::deco::zhl16::ZHL16;
-use capra::deco::zhl16::util::{ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE};
 use time::Duration;
-use capra::common::{DENSITY_FRESHWATER, DENSITY_SALTWATER, time_taken};
 use tabular::Table;
 use tabular::row;
 use std::iter::FromIterator;
-use capra::planning::modes::open_circuit::OpenCircuit;
-use capra::planning::DivePlan;
-use capra::deco::tissue::Tissue;
+use capra::modes::OpenCircuit;
+use capra::DivePlan;
+use capra_core::deco::zhl16::{ZHL16, ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_HALFLIFE, ZHL16B_HE_B};
+use capra_core::deco::Tissue;
+use capra_core::deco::zhl16::tissue_constants::TissueConstants;
+use capra_core::deco::zhl16::variant::Variant::B;
+use capra_core::common::{DiveSegment, SegmentType, Gas, DENSITY_SALTWATER};
 
 const DEFAULT_GFL: usize = 100;
 const DEFAULT_GFH: usize = 100;
 const DEFAULT_BOTTOM_SAC: usize = 20;
 const DEFAULT_DECO_SAC: usize = 20;
+const DEFAULT_ASCENT_RATE: isize = -18;
+const DEFAULT_DESCENT_RATE: isize = 30;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct JSONDecoGas {
@@ -69,12 +70,12 @@ fn main() {
 
     let ascent_rate = match js.asc {
         Some(t) => t,
-        None => capra::common::DEFAULT_ASCENT_RATE
+        None => DEFAULT_ASCENT_RATE
     };
 
     let descent_rate = match js.desc {
         Some(t) => t,
-        None => capra::common::DEFAULT_DESCENT_RATE
+        None => DEFAULT_DESCENT_RATE
     };
 
     let gfl = match js.gfl {
@@ -112,10 +113,10 @@ fn main() {
 
     let zhl16 = ZHL16::new(
         Tissue::default(), // This shouldn't error
-        ZHL16B_N2_A, ZHL16B_N2_B, ZHL16B_N2_HALFLIFE, ZHL16B_HE_A, ZHL16B_HE_B, ZHL16B_HE_HALFLIFE, gfl, gfh);
+        TissueConstants::new_by_variant(B), gfl, gfh);
 
     let dive = OpenCircuit::new(zhl16,
-                                    &deco_mixes, &bottom_segments, ascent_rate,
+                                    &deco_mixes[..], &bottom_segments[..], ascent_rate,
                                     descent_rate, DENSITY_SALTWATER, bottom_sac, deco_sac);
 
     let plan = dive.plan(); // Use this to include all AscDesc segments
