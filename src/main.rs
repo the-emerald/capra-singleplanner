@@ -1,5 +1,6 @@
 use capra::deco::zhl16::builder::ZHL16Builder;
 use capra::deco::zhl16::gradient_factor::GradientFactor;
+
 use capra::environment::Environment;
 use capra::gas::Gas;
 use capra::parameter::Parameters;
@@ -12,13 +13,12 @@ use capra::units::depth::Depth;
 use capra::units::rate::Rate;
 use capra::units::water_density::SALTWATER;
 use serde::{Deserialize, Serialize};
-use std::io::{BufRead, BufReader};
+
+use std::fs;
 use std::iter::FromIterator;
-use std::{fs, io};
 use tabular::row;
 use tabular::Table;
 use time::Duration;
-use capra::deco::DecoAlgorithm;
 
 const DEFAULT_BOTTOM_SAC: AirConsumption = AirConsumption(20);
 const DEFAULT_DECO_SAC: AirConsumption = AirConsumption(20);
