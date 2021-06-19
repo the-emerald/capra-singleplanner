@@ -7,7 +7,6 @@ use capra::parameter::Parameters;
 use capra::plan::open_circuit::OpenCircuit;
 use capra::plan::DivePlan;
 use capra::segment::{Segment, SegmentType};
-use capra::units::air_consumption::AirConsumption;
 use capra::units::altitude::Altitude;
 use capra::units::depth::Depth;
 use capra::units::rate::Rate;
@@ -19,9 +18,11 @@ use std::iter::FromIterator;
 use tabular::row;
 use tabular::Table;
 use time::Duration;
+use capra::units::consumption_rate::GasConsumptionRate;
+use capra::units::consumption::GasConsumption;
 
-const DEFAULT_BOTTOM_SAC: AirConsumption = AirConsumption(20);
-const DEFAULT_DECO_SAC: AirConsumption = AirConsumption(20);
+const DEFAULT_BOTTOM_SAC: GasConsumptionRate = GasConsumptionRate(20);
+const DEFAULT_DECO_SAC: GasConsumptionRate = GasConsumptionRate(20);
 const DEFAULT_ASCENT_RATE: Rate = Rate(-18);
 const DEFAULT_DESCENT_RATE: Rate = Rate(30);
 
@@ -47,8 +48,8 @@ struct JSONDive {
     gfh: Option<u8>,
     asc: Option<Rate>,
     desc: Option<Rate>,
-    bottom_sac: Option<AirConsumption>,
-    deco_sac: Option<AirConsumption>,
+    bottom_sac: Option<GasConsumptionRate>,
+    deco_sac: Option<GasConsumptionRate>,
     segments: Vec<JSONDiveSegment>,
     deco_gases: Vec<JSONDecoGas>,
 }
@@ -169,15 +170,15 @@ fn main() {
 
     let mut gas_plan_table = Table::new("{:>}  {:>}");
     gas_plan_table.add_row(row!("Gas", "Amount"));
-    let mut total_gas = 0;
+    let mut total_gas = GasConsumption(0);
 
     for (gas, qty) in gas_plan {
-        total_gas += qty;
+        total_gas += *qty;
         let gas_str = format!("{}/{}", gas.o2(), gas.he());
-        let qty_str = format!("{} litres", qty);
+        let qty_str = format!("{} litres", qty.0);
         gas_plan_table.add_row(row!(gas_str, qty_str));
     }
-    gas_plan_table.add_row(row!("Total", format!("{} litres", total_gas)));
+    gas_plan_table.add_row(row!("Total", format!("{} litres", total_gas.0)));
     println!("{}", gas_plan_table);
     // println!("Total gas: {} litres", total_gas);
 }
